@@ -1,8 +1,10 @@
 package com.bd.boleteriaEventos_backend.controller;
 
+import com.bd.boleteriaEventos_backend.config.IdentidadSesion;
 import com.bd.boleteriaEventos_backend.dto.ComboCreateDTO;
 import com.bd.boleteriaEventos_backend.dto.ComboResponseDTO;
 import com.bd.boleteriaEventos_backend.dto.ComboUpdateDTO;
+import com.bd.boleteriaEventos_backend.exception.ResourceNotFoundException;
 import com.bd.boleteriaEventos_backend.service.ComboService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +28,9 @@ public class ComboController {
 
     @GetMapping
     public ResponseEntity<List<ComboResponseDTO>> listarTodos() {
-        return ResponseEntity.ok(comboService.listarTodos());
+        var combos = comboService.listarTodos();
+        return ResponseEntity.ok(IdentidadSesion.clienteActual() == null ? combos
+                : combos.stream().filter(combo -> "ACTIVO".equals(combo.estado())).toList());
     }
 
     @PutMapping("/{id}")
@@ -43,6 +47,10 @@ public class ComboController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ComboResponseDTO> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(comboService.obtenerPorId(id));
+        var combo = comboService.obtenerPorId(id);
+        if (IdentidadSesion.clienteActual() != null && !"ACTIVO".equals(combo.estado())) {
+            throw new ResourceNotFoundException("Combo no disponible");
+        }
+        return ResponseEntity.ok(combo);
     }
 }

@@ -11,7 +11,11 @@ export class ApiError extends Error {
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers)
   if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
-  const response = await fetch(`${API_URL}${path}`, { ...init, headers, cache: 'no-store' })
+  if (init.method && !['GET', 'HEAD', 'OPTIONS'].includes(init.method)) {
+    const csrf = await request<{ headerName: string; token: string }>('/usuarios-sistema/csrf')
+    headers.set(csrf.headerName, csrf.token)
+  }
+  const response = await fetch(`${API_URL}${path}`, { ...init, headers, credentials: 'include', cache: 'no-store' })
   if (!response.ok) {
     let message = `Error HTTP ${response.status}`
     try {
@@ -38,6 +42,13 @@ export type BackendUser = { idUsuario: number; correo: string; estado: string; i
 
 export async function loginBackend(correo: string, clave: string) {
   return api.post<BackendUser>('/usuarios-sistema/login', { correo, clave })
+}
+
+export const sesionBackend = () => api.get<BackendUser>('/usuarios-sistema/me')
+export const logoutBackend = () => api.post<void>('/usuarios-sistema/logout')
+
+export function esAdministrador(user: BackendUser) {
+  return ['ADMIN', 'ADMINISTRADOR'].includes(user.nombreRol.trim().toUpperCase())
 }
 
 const str = (v: unknown) => v == null ? '' : String(v)
@@ -118,7 +129,7 @@ export async function loadBoleteriaData() {
 
 export async function downloadReportPdf(numero: number, idReserva?: string) {
   const query = numero === 3 && idReserva ? `?idReserva=${encodeURIComponent(idReserva)}` : ''
-  const response = await fetch(`${API_URL}/reportes/${numero}/pdf${query}`, { cache: 'no-store' })
+  const response = await fetch(`${API_URL}/reportes/${numero}/pdf${query}`, { credentials: 'include', cache: 'no-store' })
   if (!response.ok) {
     let message = `No se pudo descargar el reporte ${numero}`
     try { const body = await response.json(); message = body?.message || message } catch { /* noop */ }

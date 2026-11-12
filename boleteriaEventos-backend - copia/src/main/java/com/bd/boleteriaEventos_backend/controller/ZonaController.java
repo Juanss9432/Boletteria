@@ -1,8 +1,12 @@
 package com.bd.boleteriaEventos_backend.controller;
 
+import com.bd.boleteriaEventos_backend.config.IdentidadSesion;
 import com.bd.boleteriaEventos_backend.dto.DisponibilidadFuncionDTO;
 import com.bd.boleteriaEventos_backend.dto.ZonaCreateDTO;
 import com.bd.boleteriaEventos_backend.dto.ZonaResponseDTO;
+import com.bd.boleteriaEventos_backend.dto.FuncionResponseDTO;
+import com.bd.boleteriaEventos_backend.service.AccesoCliente;
+import com.bd.boleteriaEventos_backend.service.FuncionService;
 import com.bd.boleteriaEventos_backend.service.ZonaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/zonas")
@@ -18,6 +23,7 @@ import java.util.List;
 public class ZonaController {
 
     private final ZonaService zonaService;
+    private final FuncionService funcionService;
 
     @PostMapping
     public ResponseEntity<ZonaResponseDTO> crear(@Valid @RequestBody ZonaCreateDTO dto) {
@@ -26,7 +32,13 @@ public class ZonaController {
 
     @GetMapping
     public ResponseEntity<List<ZonaResponseDTO>> listarTodos() {
-        return ResponseEntity.ok(zonaService.listarTodos());
+        var zonas = zonaService.listarTodos();
+        if (IdentidadSesion.clienteActual() != null) {
+            var disponibles = funcionService.listarTodos().stream().filter(AccesoCliente::funcionDisponible)
+                    .map(FuncionResponseDTO::idFuncion).collect(Collectors.toSet());
+            zonas = zonas.stream().filter(zona -> disponibles.contains(zona.idFuncion())).toList();
+        }
+        return ResponseEntity.ok(zonas);
     }
 
     @PutMapping("/{id}")
@@ -42,16 +54,26 @@ public class ZonaController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ZonaResponseDTO> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(zonaService.obtenerPorId(id));
+        var zona = zonaService.obtenerPorId(id);
+        verificarFuncionParaCliente(zona.idFuncion());
+        return ResponseEntity.ok(zona);
     }
 
     @GetMapping("/funcion/{idFuncion}/disponibilidad")
     public ResponseEntity<DisponibilidadFuncionDTO> disponibilidad(@PathVariable Long idFuncion) {
+        verificarFuncionParaCliente(idFuncion);
         return ResponseEntity.ok(zonaService.disponibilidadPorFuncion(idFuncion));
     }
 
     @GetMapping("/funcion/{idFuncion}")
     public ResponseEntity<List<ZonaResponseDTO>> listarPorFuncion(@PathVariable Long idFuncion) {
+        verificarFuncionParaCliente(idFuncion);
         return ResponseEntity.ok(zonaService.listarPorFuncion(idFuncion));
+    }
+
+    private void verificarFuncionParaCliente(Long idFuncion) {
+        if (IdentidadSesion.clienteActual() != null) {
+            AccesoCliente.exigirFuncionDisponible(funcionService.obtenerPorId(idFuncion));
+        }
     }
 }

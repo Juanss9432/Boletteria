@@ -27,6 +27,7 @@ public interface BoletaRepository extends JpaRepository<Boleta, Long> {
     boolean existsByComboIdCombo(Long idCombo);
     Optional<Boleta> findByCodigo(String codigo);
     List<Boleta> findByReservaIdReserva(Long idReserva);
+    List<Boleta> findByReservaPerfilClienteUsuarioIdUsuario(Long idUsuario);
     List<Boleta> findByZonaIdZona(Long idZona);
     List<Boleta> findByComboIdCombo(Long idCombo);
 

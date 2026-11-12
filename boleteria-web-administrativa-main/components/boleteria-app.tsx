@@ -6,7 +6,9 @@ import { ReservationsModule, expirePendingSales, migrateSalesData, type Reservat
 import { NotificationsModule, createNotification, type Notification } from './notifications-module'
 import { OccupancyReport } from './occupancy-report'
 import { ReportsDashboard } from './reports-dashboard'
-import { api, ApiError, loadBoleteriaData, loginBackend, type BackendUser } from '../lib/boleteria-api'
+import { AccesoBoleteria } from './acceso-boleteria'
+import { PanelCliente } from './panel-cliente'
+import { api, ApiError, esAdministrador, loadBoleteriaData, loginBackend, logoutBackend, sesionBackend, type BackendUser } from '../lib/boleteria-api'
 
 type Status = 'PROGRAMADA' | 'CANCELADA' | 'REALIZADA'
 type View = 'login' | 'functions' | 'form' | 'reports' | 'municipios' | 'prestadorTypes' | 'ticketTypes' | 'roles' | 'prestadores' | 'planes' | 'atracciones' | 'combos' | 'usuarios' | 'clientes' | 'reservas' | 'boletas' | 'notificaciones' | 'catalogForm'
@@ -39,7 +41,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function Select({ value, onChange, children }: { value: string; onChange: (v: string) => void; children: React.ReactNode }) { return <div className="select-wrap"><select value={value} onChange={e => onChange(e.target.value)}>{children}</select><ChevronDown size={17} /></div> }
 
 function Sidebar({ view, onNavigate, currentUser }: { view: View; onNavigate: (view: View) => void; currentUser?: BackendUser | null }) { const groups: [string, [View, string][]][] = [['CATÁLOGOS', [['municipios', 'Municipios'], ['prestadorTypes', 'Tipos de prestador'], ['ticketTypes', 'Tipos de entrada'], ['roles', 'Roles']]], ['OFERTA', [['prestadores', 'Prestadores'], ['planes', 'Planes'], ['atracciones', 'Atracciones'], ['functions', 'Funciones'], ['combos', 'Combos']]], ['VENTAS', [['reservas', 'Reservas'], ['boletas', 'Boletas'], ['reports', 'Reportes']]], ['USUARIOS', [['usuarios', 'Usuarios del sistema'], ['clientes', 'Clientes']]], ['SISTEMA', [['notificaciones', 'Notificaciones']]]]; return <aside className="sidebar"><div className="sidebar-header"><div className="brand">Boletería</div></div><nav className="sidebar-nav" aria-label="Navegación principal">{groups.map(([title, links]) => <div className="nav-group" key={title}><div className="nav-label">{title}</div>{links.map(([key, text]) => <button key={key} className={view === key || (view === 'form' && key === 'functions') || view === 'catalogForm' && ['municipios', 'prestadorTypes', 'ticketTypes', 'roles'].includes(key) ? 'active' : ''} onClick={() => onNavigate(key)}>{text}</button>)}</div>)}</nav><footer className="sidebar-footer"><div className="role">{currentUser ? `${currentUser.correo} · ${currentUser.nombreRol}` : 'Sesión administrativa'}</div><button className="logout-button" onClick={() => onNavigate('login')}>Cerrar sesión</button></footer></aside> }
-function Login({ onLogin }: { onLogin: (email: string, password: string) => Promise<void> }) { const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [error, setError] = useState(''); const [loading, setLoading] = useState(false); return <main className="login-page"><div className="login-brand">Boletería</div><form className="login-card" onSubmit={async e => { e.preventDefault(); if (!email.includes('@') || !password) return setError('Ingrese un correo y una contraseña válidos.'); setLoading(true); setError(''); try { await onLogin(email, password) } catch (err) { setError(err instanceof Error ? err.message : 'No fue posible iniciar sesión.') } finally { setLoading(false) } }}><h1>Iniciar sesión</h1><p>Ingrese con su correo y contraseña.</p><Field label="Correo"><input type="email" placeholder="correo@ejemplo.com" value={email} onChange={e => setEmail(e.target.value)} /></Field><Field label="Contraseña"><input type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} /></Field>{error && <div className="form-error">{error}</div>}<button className="primary full" disabled={loading}>{loading ? 'Validando...' : 'Ingresar'}</button><button type="button" className="link-button">¿Olvidó su contraseña?</button></form></main> }
 function ConfirmDelete({ title, detail, blocked, onCancel, onConfirm }: { title: string; detail: string; blocked?: boolean; onCancel: () => void; onConfirm: () => void }) { return <section className="delete-confirm"><div><p>CONFIRMAR ELIMINACIÓN</p><h2>{title}</h2><span>{blocked ? 'No se puede eliminar porque tiene registros relacionados.' : detail}</span></div><div className="confirm-actions"><button className="secondary" onClick={onCancel}>Cancelar</button><button className="destructive" disabled={blocked} onClick={onConfirm}>Eliminar</button></div></section> }
 
 function CatalogList({ kind, items, onNew, onEdit, onDelete }: { kind: CatalogKind; items: CatalogRecord[]; onNew: () => void; onEdit: (x: CatalogRecord) => void; onDelete: (x: CatalogRecord) => void }) { const [search, setSearch] = useState(''); const rows = items.filter(x => `${x.name} ${x.department || ''}`.toLowerCase().includes(search.toLowerCase())); return <><Header title={labels[kind]} action={`Nuevo ${kind === 'municipios' ? 'municipio' : 'registro'}`} onAction={onNew} /><div className="catalog-search"><Field label="Buscar"><div className="input-icon"><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar..." /><Search size={18} /></div></Field></div><div className="table-card"><table><thead><tr><th>Nombre</th>{kind === 'municipios' && <th>Departamento</th>}{kind === 'ticketTypes' && <><th>Descuento</th><th>Requiere adulto</th></>}<th>Acciones</th></tr></thead><tbody>{rows.map(x => <tr key={x.id}><td>{x.name}</td>{kind === 'municipios' && <td>{x.department}</td>}{kind === 'ticketTypes' && <><td>{x.discount}%</td><td>{x.requiresAdult ? 'Sí' : 'No'}</td></>}<td><div className="actions"><button onClick={() => onEdit(x)}><Pencil size={15} /> Editar</button><button className="danger-text" onClick={() => onDelete(x)}><Trash2 size={15} /> Eliminar</button></div></td></tr>)}</tbody></table></div></> }
@@ -65,6 +66,7 @@ function ClientsPage({ clients, users, onSave, onDelete }: { clients: Client[]; 
 function ClientForm({ editing, clients, users, onSave, onCancel }: { editing: Client | null; clients: Client[]; users: SystemUser[]; onSave: (x: Client) => void; onCancel: () => void }) { const [form, setForm] = useState<Client>(editing || { id: '', document: '', name: '', phone: '', userId: users[0]?.id || '' }); const [error, setError] = useState(''); function save(e: React.FormEvent) { e.preventDefault(); if (!form.document || !form.name || !form.userId) return setError('Documento, nombre y usuario asociado son obligatorios.'); if (clients.some(c => c.document === form.document && c.id !== form.id)) return setError('El documento debe ser único.'); if (clients.some(c => c.userId === form.userId && c.id !== form.id)) return setError('Cada usuario solo puede tener un perfil de cliente.'); if (!users.some(u => u.id === form.userId)) return setError('Selecciona un usuario existente.'); onSave({ ...form, id: form.id || `client-${Date.now()}` }) } return <form onSubmit={save}><Header title={`${editing ? 'Editar' : 'Nuevo'} cliente`} /><section className="form-card"><div className="form-grid two"><Field label="Documento"><input value={form.document} onChange={e => setForm({ ...form, document: e.target.value })} /></Field><Field label="Nombre"><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></Field><Field label="Teléfono"><input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></Field><Field label="Usuario asociado"><Select value={form.userId} onChange={v => setForm({ ...form, userId: v })}>{users.map(u => <option key={u.id} value={u.id}>{u.email}</option>)}</Select></Field></div></section>{error && <div className="form-error form-error-wide">{error}</div>}<div className="form-actions"><button className="primary">Guardar cliente</button><button type="button" className="secondary" onClick={onCancel}>Cancelar</button></div></form> }
 
 export function BoleteriaApp() {
+  const [recuperandoSesion, setRecuperandoSesion] = useState(true)
   const [view, setView] = useState<View>('login')
   const [mobile, setMobile] = useState(false)
   const [currentUser, setCurrentUser] = useState<BackendUser | null>(null)
@@ -106,26 +108,52 @@ export function BoleteriaApp() {
   }
 
   useEffect(() => {
-    void refresh().catch(() => { /* el login mostrará el error si el backend sigue apagado */ })
-    const saved = sessionStorage.getItem('boleteria-auth-user')
-    if (saved) {
-      try { setCurrentUser(JSON.parse(saved)); setView('functions') } catch { sessionStorage.removeItem('boleteria-auth-user') }
-    }
+    let vigente = true
+    void sesionBackend().then(async user => {
+      const administrador = esAdministrador(user)
+      if (!administrador && user.nombreRol.trim().toUpperCase() !== 'CLIENTE') return
+      const data = administrador ? await loadBoleteriaData() : null
+      if (!vigente) return
+      if (data) applyData(data)
+      setCurrentUser(user)
+      if (administrador) setView('functions')
+    }).catch(() => { /* Se conserva la pantalla de inicio de sesión. */ }).finally(() => {
+      if (vigente) setRecuperandoSesion(false)
+    })
+    return () => { vigente = false }
   }, [])
 
   const login = async (email: string, password: string) => {
-    const user = await loginBackend(email, password)
-    if (String(user.estado).toUpperCase() !== 'ACTIVO') throw new Error('El usuario está inactivo.')
+    await loginBackend(email, password)
+    const user = await sesionBackend()
+    const administrador = esAdministrador(user)
+    if (!administrador && user.nombreRol.trim().toUpperCase() !== 'CLIENTE') {
+      await logoutBackend()
+      throw new Error('Esta cuenta no tiene acceso a un panel de boletería.')
+    }
+    if (administrador) {
+      await refresh()
+      setView('functions')
+    }
     setCurrentUser(user)
-    sessionStorage.setItem('boleteria-auth-user', JSON.stringify(user))
-    await refresh()
-    setView('functions')
+  }
+
+  const salir = async () => {
+    try {
+      await logoutBackend()
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.status !== 401) throw error
+    }
+    setCurrentUser(null)
+    setView('login')
+    setMobile(false)
+    setCatalogEditing(null)
   }
 
   const nav = (v: View) => {
     if (v === 'login') {
-      sessionStorage.removeItem('boleteria-auth-user')
-      setCurrentUser(null)
+      void salir().catch(showError)
+      return
     }
     if (['municipios', 'prestadorTypes', 'ticketTypes', 'roles'].includes(v)) {
       setCatalogKind(v as CatalogKind)
@@ -265,7 +293,12 @@ export function BoleteriaApp() {
     })
   }
 
-  if (view === 'login') return <Login onLogin={login} />
+  if (recuperandoSesion) return <main className="login-page"><div className="login-brand">Boletería</div><p role="status">Comprobando sesión…</p></main>
+  if (!currentUser) return <AccesoBoleteria onLogin={login} />
+  if (currentUser.nombreRol.trim().toUpperCase() === 'CLIENTE') {
+    return <PanelCliente key={currentUser.idUsuario} usuario={currentUser} onSalir={salir} />
+  }
+  if (!esAdministrador(currentUser) || view === 'login') return <AccesoBoleteria onLogin={login} />
 
   return <div className="app-shell">
     <button className="mobile-menu" onClick={() => setMobile(!mobile)} aria-label="Abrir menú"><Menu /></button>

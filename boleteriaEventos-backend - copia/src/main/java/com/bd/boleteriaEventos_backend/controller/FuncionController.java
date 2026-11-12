@@ -1,8 +1,10 @@
 package com.bd.boleteriaEventos_backend.controller;
 
+import com.bd.boleteriaEventos_backend.config.IdentidadSesion;
 import com.bd.boleteriaEventos_backend.dto.FuncionCreateDTO;
 import com.bd.boleteriaEventos_backend.dto.FuncionResponseDTO;
 import com.bd.boleteriaEventos_backend.dto.FuncionUpdateDTO;
+import com.bd.boleteriaEventos_backend.service.AccesoCliente;
 import com.bd.boleteriaEventos_backend.service.FuncionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +28,7 @@ public class FuncionController {
 
     @GetMapping
     public ResponseEntity<List<FuncionResponseDTO>> listarTodos() {
-        return ResponseEntity.ok(funcionService.listarTodos());
+        return ResponseEntity.ok(filtrarParaCliente(funcionService.listarTodos()));
     }
 
     @PatchMapping("/{id}/cancelar")
@@ -47,11 +49,20 @@ public class FuncionController {
 
     @GetMapping("/{id}")
     public ResponseEntity<FuncionResponseDTO> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(funcionService.obtenerPorId(id));
+        var funcion = funcionService.obtenerPorId(id);
+        if (IdentidadSesion.clienteActual() != null) {
+            AccesoCliente.exigirFuncionDisponible(funcion);
+        }
+        return ResponseEntity.ok(funcion);
     }
 
     @GetMapping("/atraccion/{idAtraccion}")
     public ResponseEntity<List<FuncionResponseDTO>> listarPorAtraccion(@PathVariable Long idAtraccion) {
-        return ResponseEntity.ok(funcionService.listarPorAtraccion(idAtraccion));
+        return ResponseEntity.ok(filtrarParaCliente(funcionService.listarPorAtraccion(idAtraccion)));
+    }
+
+    private List<FuncionResponseDTO> filtrarParaCliente(List<FuncionResponseDTO> funciones) {
+        return IdentidadSesion.clienteActual() == null ? funciones
+                : funciones.stream().filter(AccesoCliente::funcionDisponible).toList();
     }
 }

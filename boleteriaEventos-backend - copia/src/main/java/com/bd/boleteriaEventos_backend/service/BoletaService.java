@@ -148,10 +148,13 @@ public class BoletaService {
     }
 
     static void validarFuncionEnVenta(Funcion funcion, LocalDateTime ahora) {
-        if (funcionCancelada(funcion) || "CERRADA".equals(funcion.getEstado())
-                || !ahora.isBefore(funcion.getFecha().atTime(funcion.getHoraCierre()))) {
+        if (!funcionEnVenta(funcion.getEstado(), funcion.getFecha().atTime(funcion.getHoraCierre()), ahora)) {
             throw new BusinessRuleException("La función está cancelada o cerrada");
         }
+    }
+
+    static boolean funcionEnVenta(String estado, LocalDateTime cierre, LocalDateTime ahora) {
+        return !"CANCELADA".equals(estado) && !"CERRADA".equals(estado) && ahora.isBefore(cierre);
     }
 
     static boolean funcionCancelada(Funcion funcion) {
@@ -240,6 +243,11 @@ public class BoletaService {
         return boletaRepository.findByReservaIdReserva(idReserva).stream()
                 .map(this::mapToDTO)
                 .toList();
+    }
+
+    public List<BoletaResponseDTO> listarPorUsuario(Long idUsuario) {
+        return boletaRepository.findByReservaPerfilClienteUsuarioIdUsuario(idUsuario).stream()
+                .map(this::mapToDTO).toList();
     }
 
     public BoletaResponseDTO mapToDTO(Boleta b) {

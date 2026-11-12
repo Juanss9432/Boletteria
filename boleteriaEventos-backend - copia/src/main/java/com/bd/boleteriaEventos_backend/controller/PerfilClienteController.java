@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,6 +30,7 @@ public class PerfilClienteController {
         return ResponseEntity.ok(perfilClienteService.listarTodos());
     }
 
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('CLIENTE') and @accesoCliente.perfilPropio(principal, #p0))")
     @PutMapping("/{id}")
     public ResponseEntity<PerfilClienteResponseDTO> actualizar(@PathVariable Long id,
             @Valid @RequestBody PerfilClienteUpdateDTO dto) {
@@ -41,11 +43,13 @@ public class PerfilClienteController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('CLIENTE') and @accesoCliente.perfilPropio(principal, #p0))")
     @GetMapping("/{id}")
     public ResponseEntity<PerfilClienteResponseDTO> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(perfilClienteService.obtenerPorId(id));
     }
 
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('CLIENTE') and #p0.equals(principal.idUsuario()))")
     @GetMapping("/usuario/{idUsuario}")
     public ResponseEntity<PerfilClienteResponseDTO> obtenerPorUsuario(@PathVariable Long idUsuario) {
         return ResponseEntity.ok(perfilClienteService.obtenerPorUsuario(idUsuario));
