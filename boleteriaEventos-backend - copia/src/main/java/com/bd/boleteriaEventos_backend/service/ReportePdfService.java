@@ -77,9 +77,9 @@ public class ReportePdfService {
                 }
             });
             documento.addTitle(reporte.titulo());
-            documento.addCreator("Sistema de Boletería");
+            documento.addCreator("Sistema de Boletería y Eventos");
             documento.open();
-            documento.add(new Paragraph("Sistema de Boletería", fuente(11, Font.BOLD, GRIS)));
+            documento.add(new Paragraph("Sistema de Boletería y Eventos", fuente(11, Font.BOLD, GRIS)));
             String titulo = reporte.titulo();
             if (comprobante && !datos.filas().isEmpty()) {
                 titulo = "COMPROBANTE_COMPRA".equals(datos.filas().getFirst().get(12))
@@ -130,7 +130,7 @@ public class ReportePdfService {
         tabla.setWidths(anchos);
         if (datos.filas().isEmpty()) {
             String mensaje = reporte == ReportePdf.RANKING_ATRACCIONES
-                    ? "No se encontraron ventas de atracciones para generar el ranking"
+                    ? "No se encontraron ventas de eventos para generar el ranking"
                     : "No se encontraron registros.";
             PdfPCell vacia = celda(mensaje, false, false, Color.WHITE);
             vacia.setColspan(encabezados.size());
@@ -153,7 +153,7 @@ public class ReportePdfService {
             return 0.68f;
         }
         return switch (columna) {
-            case "ATRACCION", "PRESTADOR", "CLIENTE", "CORREO", "CODIGO_BOLETA", "PLAN_TURISTICO",
+            case "EVENTO", "ATRACCION", "PRESTADOR", "ORGANIZADOR", "CLIENTE", "CORREO", "CODIGO_BOLETA", "PLAN", "PLAN_TURISTICO",
                     "TIPO_ENTRADA", "COMBO", "TIPO_PRESTADOR" -> 1.55f;
             case "FECHA_HORA", "PRIMERA_RESERVA", "ULTIMA_RESERVA", "TOTAL_INGRESOS", "PRECIO_PROMEDIO",
                     "PRECIO_PAGADO", "PRECIO" -> 1.35f;

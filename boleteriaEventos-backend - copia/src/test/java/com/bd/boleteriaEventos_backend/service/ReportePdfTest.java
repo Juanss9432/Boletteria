@@ -31,10 +31,10 @@ class ReportePdfTest {
         var lector = new PdfReader(new ReportePdfService(repositorio).generar(ReportePdf.RANKING_ATRACCIONES, null));
         try {
             var pagina = new PdfTextExtractor(lector).getTextFromPage(1);
-            assertTrue(pagina.contains("Ranking de atracciones más vendidas"));
+            assertTrue(pagina.contains("Ranking de eventos más vendidos"));
             var texto = pagina.replaceAll("\\s+", " ");
-            assertTrue(texto.contains("Posición Atracción Prestador Boletas vendidas Ingresos generados"));
-            assertTrue(texto.contains("No se encontraron ventas de atracciones para generar el ranking"));
+            assertTrue(texto.contains("Posición Evento Organizador Boletas vendidas Ingresos generados"));
+            assertTrue(texto.contains("No se encontraron ventas de eventos para generar el ranking"));
         } finally {
             lector.close();
         }

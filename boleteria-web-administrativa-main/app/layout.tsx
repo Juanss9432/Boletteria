@@ -3,8 +3,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Boletería | Gestión turística',
-  description: 'Administración de funciones, reservas y reportes para atracciones del Quindío.',
+  title: 'Boletería y Eventos | Maratones, Conciertos y Más',
+  description: 'Plataforma oficial de boletería para maratones, carreras de ciclismo, triatlones, conciertos, presentaciones teatrales y espectáculos.',
   generator: 'v0.app',
   icons: {
     icon: [

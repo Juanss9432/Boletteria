@@ -50,6 +50,18 @@ export function PanelCliente({ usuario, onSalir }: { usuario: BackendUser; onSal
 
   useEffect(() => {
     let vigente = true
+    if (typeof window !== 'undefined') {
+      try {
+        const guardado = localStorage.getItem(`boleteria_cliente_${usuario.idUsuario}`)
+        if (guardado) {
+          const { catalogo: c, perfil: p, actividad: a } = JSON.parse(guardado)
+          if (c) setCatalogo(c)
+          if (p) setPerfil(p)
+          if (a) setActividad(a)
+        }
+      } catch {}
+    }
+
     void Promise.all([cargarCatalogoCliente(), clienteApi.perfil(usuario.idUsuario), cargarActividad()])
       .then(([catalogoActual, perfilActual, actividadActual]) => {
         if (!vigente) return
@@ -57,6 +69,13 @@ export function PanelCliente({ usuario, onSalir }: { usuario: BackendUser; onSal
         setPerfil(perfilActual)
         setActividad(actividadActual)
         setErrorCarga('')
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(`boleteria_cliente_${usuario.idUsuario}`, JSON.stringify({
+              catalogo: catalogoActual, perfil: perfilActual, actividad: actividadActual
+            }))
+          } catch {}
+        }
       }).catch(err => {
         if (vigente) setErrorCarga(mensajeError(err, 'No se pudo cargar tu cuenta.'))
       })
@@ -191,7 +210,7 @@ export function PanelCliente({ usuario, onSalir }: { usuario: BackendUser; onSal
     </button>
     <div className={menu ? 'sidebar-wrap open' : 'sidebar-wrap'}>
       <aside className="sidebar" id="menu-cliente">
-        <header className="sidebar-header"><div className="brand">Boletería</div></header>
+        <header className="sidebar-header"><div className="brand">Boletería y Eventos</div></header>
         <nav className="sidebar-nav" aria-label="Navegación de cliente">
           {(Object.keys(secciones) as Seccion[]).map(item => (
             <button type="button" key={item} className={seccion === item ? 'active' : undefined}
@@ -228,7 +247,7 @@ export function PanelCliente({ usuario, onSalir }: { usuario: BackendUser; onSal
       {catalogo && perfil && actividad && <>
         {seccion === 'inicio' && <div className="cliente-inicio">
           <section className="form-card cliente-destacado">
-            <div><h2>Próximas funciones</h2><p>Encuentra un horario y consulta las zonas antes de reservar.</p></div>
+            <div><h2>Próximos eventos y funciones</h2><p>Encuentra maratones, carreras, conciertos y espectáculos, y asegura tus entradas.</p></div>
             <button type="button" className="primary" onClick={() => abrirCompra({ funcion: 0 })}>Comprar entradas</button>
           </section>
           <Funciones catalogo={catalogo} funciones={catalogo.funciones.slice(0, 3)} onComprar={id => abrirCompra({ funcion: id })} />

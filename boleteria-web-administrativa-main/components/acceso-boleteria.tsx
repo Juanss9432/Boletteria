@@ -24,7 +24,7 @@ const campos: { nombre: keyof Registro; etiqueta: string; tipo: string; auto: st
 
 export function AccesoBoleteria({ onLogin }: { onLogin: (correo: string, clave: string) => Promise<void> }) {
   const [registro, setRegistro] = useState(false)
-  const [correo, setCorreo] = useState('')
+  const [correo, setCorreo] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('boleteria_last_email') || '' : ''))
   const [error, setError] = useState('')
   const [confirmacion, setConfirmacion] = useState(false)
   const [cargando, setCargando] = useState(false)
@@ -55,10 +55,22 @@ export function AccesoBoleteria({ onLogin }: { onLogin: (correo: string, clave: 
           return
         }
         await clienteApi.registrar(alta)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('boleteria_last_email', email)
+        }
         setCorreo(email)
         setRegistro(false)
         setConfirmacion(true)
+        // Autenticación automática inmediata tras crear cuenta:
+        try {
+          await onLogin(email, clave)
+        } catch {
+          /* Si falla el auto-login se mantiene el mensaje de confirmación */
+        }
       } else {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('boleteria_last_email', email)
+        }
         await onLogin(email, clave)
       }
     } catch (err) {
@@ -72,7 +84,7 @@ export function AccesoBoleteria({ onLogin }: { onLogin: (correo: string, clave: 
 
   return (
     <main className={registro ? 'login-page registro-page' : 'login-page'}>
-      <div className="login-brand">Boletería</div>
+      <div className="login-brand">Boletería y Eventos</div>
       <form key={registro ? 'registro' : 'login'} className="login-card" onSubmit={enviar}>
         <h1>{registro ? 'Crear cuenta' : 'Iniciar sesión'}</h1>
         <p>{registro ? 'Completa tus datos para comprar y consultar tus entradas.' : 'Ingrese con su correo y contraseña.'}</p>

@@ -1,11 +1,11 @@
--- DIEZ REPORTES ACADEMICOS: modelo plural usado por el backend Spring Boot.
+-- DIEZ REPORTES: Modelo de Boleteria y Eventos (Deportes, Conciertos, Presentaciones y Cultura).
 -- Ejecutar SELECT individualmente en SQL Developer (F9).
 -- Para PDF desde Java: ejecutar las consultas en repositorios y generar PDF en servicio.
 -- Los reportes 5/7/8 consideran ventas confirmadas ACTIVA/USADA.
 
 
 -- =========================================================
--- REPORTE 1: PROXIMAS FUNCIONES TURISTICAS
+-- REPORTE 1: PROXIMOS EVENTOS Y FUNCIONES
 -- =========================================================
 
 SELECT
@@ -130,7 +130,7 @@ ORDER BY F.FECHA, A.NOMBRE, Z.NOMBRE;
 
 
 -- =========================================================
--- REPORTE 5: INGRESOS POR ATRACCION Y TIPO DE ENTRADA
+-- REPORTE 5: INGRESOS POR EVENTO Y TIPO DE ENTRADA
 -- =========================================================
 
 SELECT
@@ -174,7 +174,7 @@ ORDER BY MES, R.ESTADO;
 
 
 -- =========================================================
--- REPORTE 7: INGRESOS POR MUNICIPIO Y TIPO DE PRESTADOR
+-- REPORTE 7: INGRESOS POR MUNICIPIO Y TIPO DE ORGANIZADOR
 -- =========================================================
 
 SELECT
@@ -266,7 +266,7 @@ ORDER BY RESERVAS_CONFIRMADAS DESC, P.NOMBRE;
 
 
 -- =========================================================
--- REPORTE 10: RANKING DE ATRACCIONES MÁS VENDIDAS
+-- REPORTE 10: RANKING DE EVENTOS MAS VENDIDOS
 -- =========================================================
 
 SELECT

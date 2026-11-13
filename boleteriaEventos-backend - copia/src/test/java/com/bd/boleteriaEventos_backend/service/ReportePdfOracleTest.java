@@ -84,7 +84,7 @@ class ReportePdfOracleTest {
                 assertTrue(texto.contains("Generado el"), reporte.titulo());
                 if (esperado.isEmpty()) {
                     String mensaje = reporte == ReportePdf.RANKING_ATRACCIONES
-                            ? "No se encontraron ventas de atracciones para generar el ranking"
+                            ? "No se encontraron ventas de eventos para generar el ranking"
                             : "No se encontraron registros.";
                     assertTrue(texto.replaceAll("\\s+", " ").contains(mensaje), reporte.titulo());
                 }
