@@ -24,8 +24,8 @@ public enum ReportePdf {
             "ID combo", "Combo", "Precio actual", "Estado", "Reservas con combo", "Boletas de combo", "Total ingresos"),
     RECURRENTES(9, "Clientes recurrentes", "clientes-recurrentes",
             "ID perfil", "Documento", "Cliente", "Correo", "Reservas confirmadas", "Primera reserva", "Última reserva"),
-    AUDITORIA(10, "Auditoría de menores sin adulto", "auditoria-de-menores-sin-adulto",
-            "ID reserva", "Cliente", "Atracción", "ID función", "Fecha", "Boletas de menores");
+    RANKING_ATRACCIONES(10, "Ranking de atracciones más vendidas", "reporte_10_ranking_atracciones",
+            "Posición", "Atracción", "Prestador", "Boletas vendidas", "Ingresos generados");
 
     private final int numero;
     private final String titulo;

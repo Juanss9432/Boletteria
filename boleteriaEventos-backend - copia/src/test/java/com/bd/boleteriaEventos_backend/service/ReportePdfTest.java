@@ -23,17 +23,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ReportePdfTest {
 
     @Test
-    void unReporteVacioConservaEncabezadosYExplicaElResultado() throws Exception {
+    void elRankingVacioConservaEncabezadosYExplicaElResultado() throws Exception {
         var repositorio = mock(ReportePdfRepository.class);
-        when(repositorio.consultar(ReportePdf.AUDITORIA, null)).thenReturn(new DatosReportePdf(
-                List.of("ID_RESERVA", "CLIENTE", "ATRACCION", "ID_FUNCION", "FECHA", "BOLETAS_MENORES"), List.of()));
+        when(repositorio.consultar(ReportePdf.RANKING_ATRACCIONES, null)).thenReturn(new DatosReportePdf(
+                List.of("POSICION", "ATRACCION", "PRESTADOR", "BOLETAS_VENDIDAS", "TOTAL_INGRESOS"), List.of()));
 
-        var lector = new PdfReader(new ReportePdfService(repositorio).generar(ReportePdf.AUDITORIA, null));
+        var lector = new PdfReader(new ReportePdfService(repositorio).generar(ReportePdf.RANKING_ATRACCIONES, null));
         try {
             var pagina = new PdfTextExtractor(lector).getTextFromPage(1);
-            assertTrue(pagina.contains("Auditoría de menores sin adulto"));
-            assertTrue(pagina.replaceAll("\\s+", " ").contains("Boletas de menores"));
-            assertTrue(pagina.contains("No se encontraron registros."));
+            assertTrue(pagina.contains("Ranking de atracciones más vendidas"));
+            var texto = pagina.replaceAll("\\s+", " ");
+            assertTrue(texto.contains("Posición Atracción Prestador Boletas vendidas Ingresos generados"));
+            assertTrue(texto.contains("No se encontraron ventas de atracciones para generar el ranking"));
         } finally {
             lector.close();
         }

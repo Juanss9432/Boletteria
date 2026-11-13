@@ -3,6 +3,7 @@ package com.bd.boleteriaEventos_backend.controller;
 import com.bd.boleteriaEventos_backend.dto.AforoFuncionDTO;
 import com.bd.boleteriaEventos_backend.dto.ComboVentasDTO;
 import com.bd.boleteriaEventos_backend.dto.IngresosAtraccionDTO;
+import com.bd.boleteriaEventos_backend.dto.RankingAtraccionDTO;
 import com.bd.boleteriaEventos_backend.dto.ReportePdf;
 import com.bd.boleteriaEventos_backend.service.ReportePdfService;
 import com.bd.boleteriaEventos_backend.service.ReporteService;
@@ -51,6 +52,11 @@ public class ReporteController {
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         ContentDisposition.attachment().filename(archivo + ".pdf").build().toString())
                 .body(pdf);
+    }
+
+    @GetMapping("/10")
+    public List<RankingAtraccionDTO> rankingAtracciones() {
+        return reporteService.rankingAtracciones();
     }
 
     @GetMapping("/aforo-por-funcion")

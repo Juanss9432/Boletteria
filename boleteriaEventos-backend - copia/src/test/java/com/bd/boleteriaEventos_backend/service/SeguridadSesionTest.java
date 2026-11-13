@@ -171,6 +171,7 @@ class SeguridadSesionTest {
         assertEquals(200, get("/atracciones").statusCode());
         assertEquals(403, get("/usuarios-sistema").statusCode());
         assertEquals(403, get("/reportes/1/pdf").statusCode());
+        assertEquals(403, get("/reportes/10").statusCode());
         assertEquals(403, enviar("PATCH", "/funciones/1/cancelar", null, csrf).statusCode());
         assertEquals(201, enviar("POST", "/reservas", "{\"idPerfil\":30}", csrf).statusCode());
         assertEquals(403, enviar("POST", "/reservas", "{\"idPerfil\":40}", csrf).statusCode());

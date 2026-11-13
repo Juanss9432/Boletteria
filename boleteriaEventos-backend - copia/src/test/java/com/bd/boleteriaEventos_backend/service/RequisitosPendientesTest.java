@@ -177,7 +177,7 @@ class RequisitosPendientesTest {
     void reportesDeIngresosAplicanLosMismosEstadosDeVenta() {
         var funciones = mock(FuncionRepository.class);
         var boletas = mock(BoletaRepository.class);
-        var servicio = new ReporteService(funciones, boletas);
+        var servicio = new ReporteService(funciones, boletas, mock(ReportePdfRepository.class));
 
         servicio.aforoPorFuncion();
         servicio.ingresosPorAtraccionYTipo();

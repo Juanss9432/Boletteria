@@ -93,7 +93,7 @@ public class ReportePdfService {
             if (comprobante && !datos.filas().isEmpty()) {
                 agregarResumen(documento, datos);
             }
-            documento.add(tabla(reporte.encabezados(), datos, desde, hasta));
+            documento.add(tabla(reporte, datos, desde, hasta));
         } catch (DocumentException ex) {
             throw new IllegalStateException("No se pudo generar el PDF del reporte " + reporte.numero(), ex);
         } finally {
@@ -114,7 +114,8 @@ public class ReportePdfService {
         documento.add(total);
     }
 
-    private PdfPTable tabla(List<String> encabezados, DatosReportePdf datos, int desde, int hasta) throws DocumentException {
+    private PdfPTable tabla(ReportePdf reporte, DatosReportePdf datos, int desde, int hasta) throws DocumentException {
+        List<String> encabezados = reporte.encabezados();
         var tabla = new PdfPTable(encabezados.size());
         tabla.setWidthPercentage(100);
         tabla.setHeaderRows(1);
@@ -128,7 +129,10 @@ public class ReportePdfService {
         }
         tabla.setWidths(anchos);
         if (datos.filas().isEmpty()) {
-            PdfPCell vacia = celda("No se encontraron registros.", false, false, Color.WHITE);
+            String mensaje = reporte == ReportePdf.RANKING_ATRACCIONES
+                    ? "No se encontraron ventas de atracciones para generar el ranking"
+                    : "No se encontraron registros.";
+            PdfPCell vacia = celda(mensaje, false, false, Color.WHITE);
             vacia.setColspan(encabezados.size());
             tabla.addCell(vacia);
         }
