@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -143,7 +144,7 @@ public class ReservaService {
     }
 
     public List<ReservaResponseDTO> listarTodos() {
-        return reservaRepository.findAll().stream()
+        return reservaRepository.findAllByOrderByIdReservaDesc().stream()
                 .map(this::mapToDTO)
                 .toList();
     }
@@ -155,7 +156,7 @@ public class ReservaService {
     }
 
     public List<ReservaResponseDTO> listarPorPerfil(Long idPerfil) {
-        return reservaRepository.findByPerfilClienteIdPerfil(idPerfil).stream()
+        return reservaRepository.findByPerfilClienteIdPerfilOrderByIdReservaDesc(idPerfil).stream()
                 .map(this::mapToDTO)
                 .toList();
     }

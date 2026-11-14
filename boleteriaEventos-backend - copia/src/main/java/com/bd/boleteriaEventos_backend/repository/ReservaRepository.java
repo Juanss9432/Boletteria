@@ -16,7 +16,9 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     @Query("delete from Reserva registro where registro.idReserva = :id")
     int eliminarSinCascada(@Param("id") Long id);
 
+    List<Reserva> findAllByOrderByIdReservaDesc();
     List<Reserva> findByPerfilClienteIdPerfil(Long idPerfil);
+    List<Reserva> findByPerfilClienteIdPerfilOrderByIdReservaDesc(Long idPerfil);
     List<Reserva> findByPlanIdPlan(Long idPlan);
     boolean existsByEstadoAndFechaHoraLessThanEqual(String estado, LocalDateTime fechaLimite);
     List<Reserva> findByEstadoAndFechaHoraLessThanEqual(String estado, LocalDateTime fechaLimite);

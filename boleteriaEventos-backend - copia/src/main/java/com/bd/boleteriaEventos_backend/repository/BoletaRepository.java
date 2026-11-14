@@ -32,8 +32,11 @@ public interface BoletaRepository extends JpaRepository<Boleta, Long> {
 
     @Query("SELECT MAX(b.idBoleta) FROM Boleta b")
     Optional<Long> findMaxIdBoleta();
+    List<Boleta> findAllByOrderByIdBoletaDesc();
     List<Boleta> findByReservaIdReserva(Long idReserva);
+    List<Boleta> findByReservaIdReservaOrderByIdBoletaDesc(Long idReserva);
     List<Boleta> findByReservaPerfilClienteUsuarioIdUsuario(Long idUsuario);
+    List<Boleta> findByReservaPerfilClienteUsuarioIdUsuarioOrderByIdBoletaDesc(Long idUsuario);
     List<Boleta> findByZonaIdZona(Long idZona);
     List<Boleta> findByComboIdCombo(Long idCombo);
 

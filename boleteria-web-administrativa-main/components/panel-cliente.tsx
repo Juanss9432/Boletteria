@@ -377,9 +377,12 @@ function Reservas({ reservas, boletas, catalogo, detalle, ocupado, onVer, onConf
   onVer: (id: number) => void; onConfirmar: (reserva: Reserva) => void
 }) {
   if (!reservas.length) return <p className="empty">Aún no tienes reservas.</p>
-  return <div className="cliente-reservas">{reservas.map(reserva => {
+  const reservasOrdenadas = reservas.slice().sort((a, b) => (b.idReserva || 0) - (a.idReserva || 0))
+  return <div className="cliente-reservas">{reservasOrdenadas.map(reserva => {
     const abiertas = detalle?.id === reserva.idReserva ? detalle : undefined
-    const entradas = abiertas?.boletas ?? boletas.filter(boleta => boleta.idReserva === reserva.idReserva)
+    const entradas = (abiertas?.boletas ?? boletas.filter(boleta => boleta.idReserva === reserva.idReserva))
+      .slice()
+      .sort((a, b) => (b.idBoleta || 0) - (a.idBoleta || 0))
     const total = entradas.reduce((suma, boleta) => suma + boleta.precioPagado, 0)
     return <article className="form-card cliente-tarjeta" key={reserva.idReserva}>
       <header className="cliente-fila">
@@ -402,7 +405,8 @@ function Reservas({ reservas, boletas, catalogo, detalle, ocupado, onVer, onConf
 
 function ListaBoletas({ boletas, catalogo }: { boletas: Boleta[]; catalogo: CatalogoCliente }) {
   if (!boletas.length) return <p className="empty">No hay boletas para mostrar.</p>
-  return <div className="cliente-rejilla cliente-boletas">{boletas.map(boleta => {
+  const boletasOrdenadas = boletas.slice().sort((a, b) => (b.idBoleta || 0) - (a.idBoleta || 0))
+  return <div className="cliente-rejilla cliente-boletas">{boletasOrdenadas.map(boleta => {
     const zona = catalogo.zonas.find(item => item.idZona === boleta.idZona)
     const funcion = catalogo.funciones.find(item => item.idFuncion === zona?.idFuncion)
     return <article className="cliente-boleto" key={boleta.idBoleta}>

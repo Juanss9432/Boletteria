@@ -112,7 +112,7 @@ export async function loadBoleteriaData() {
 
   const tickets = boletas.map(x => ({
     id: str(x.idBoleta), code: x.codigo, reservationId: str(x.idReserva), lineId: str(x.idBoleta), zoneId: str(x.idZona), functionId: functionByZone.get(str(x.idZona)), zoneName: x.nombreZona || zoneName.get(str(x.idZona)), ticketTypeId: str(x.idTipoEntrada), comboId: x.idCombo == null ? undefined : str(x.idCombo), price: num(x.precioPagado), status: x.estado === 'ACTIVA' ? 'VENDIDA' : x.estado,
-  }))
+  })).sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0) || b.code.localeCompare(a.code, undefined, { numeric: true }))
 
   const reservations = reservas.map(x => {
     const related = tickets.filter(t => t.reservationId === str(x.idReserva))
@@ -120,7 +120,7 @@ export async function loadBoleteriaData() {
       id: str(x.idReserva), number: `RES-${x.idReserva}`, clientId: str(x.idPerfil), planId: x.idPlan == null ? undefined : str(x.idPlan), createdAt: x.fechaHora, status: x.estado,
       lines: related.map(t => ({ id: t.lineId, functionId: t.functionId || '', zoneId: t.zoneId, zoneName: t.zoneName, ticketTypeId: t.ticketTypeId, comboId: t.comboId, price: t.price, discount: 0 }))
     }
-  })
+  }).sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
   const notifications = notificaciones.map(x => ({ id: str(x.idNotificacion), userId: str(x.idUsuario), reservationId: x.idReserva == null ? undefined : str(x.idReserva), subject: x.asunto, message: x.mensaje, createdAt: x.fechaHora, status: x.leida ? 'LEÍDA' : 'NO LEÍDA' }))
 

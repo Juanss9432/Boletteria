@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -236,7 +237,7 @@ public class BoletaService {
     }
 
     public List<BoletaResponseDTO> listarTodos() {
-        return boletaRepository.findAll().stream()
+        return boletaRepository.findAllByOrderByIdBoletaDesc().stream()
                 .map(this::mapToDTO)
                 .toList();
     }
@@ -248,13 +249,13 @@ public class BoletaService {
     }
 
     public List<BoletaResponseDTO> listarPorReserva(Long idReserva) {
-        return boletaRepository.findByReservaIdReserva(idReserva).stream()
+        return boletaRepository.findByReservaIdReservaOrderByIdBoletaDesc(idReserva).stream()
                 .map(this::mapToDTO)
                 .toList();
     }
 
     public List<BoletaResponseDTO> listarPorUsuario(Long idUsuario) {
-        return boletaRepository.findByReservaPerfilClienteUsuarioIdUsuario(idUsuario).stream()
+        return boletaRepository.findByReservaPerfilClienteUsuarioIdUsuarioOrderByIdBoletaDesc(idUsuario).stream()
                 .map(this::mapToDTO).toList();
     }
 
