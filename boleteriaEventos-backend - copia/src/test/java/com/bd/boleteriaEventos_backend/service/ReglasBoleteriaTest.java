@@ -141,4 +141,42 @@ class ReglasBoleteriaTest {
         assertEquals("USADA", usada.getEstado());
         assertEquals("ANULADA", anulada.getEstado());
     }
+
+    @Test
+    void emitirGeneraCodigosSecuencialesFormatoBoleto() {
+        ZonaRepository zonas = mock(ZonaRepository.class);
+        TipoEntradaRepository tipos = mock(TipoEntradaRepository.class);
+        BoletaService boletaService = new BoletaService(
+                boletas, reservas, zonas, tipos, mock(ComboRepository.class),
+                mock(ComboAtraccionRepository.class), bloqueo
+        );
+
+        when(boletas.findMaxCodigoBoleta()).thenReturn(Optional.of("BOLETO-000022"));
+        when(boletas.findMaxIdBoleta()).thenReturn(Optional.of(22L));
+
+        var fecha = BoletaService.ahora().toLocalDate().plusDays(2);
+        Funcion funcion = Funcion.builder().idFuncion(1L).fecha(fecha).horaApertura(LocalTime.of(8, 0)).horaCierre(LocalTime.of(18, 0)).estado("PROGRAMADA").build();
+        Zona zona = Zona.builder().idZona(1L).aforo(100).precio(BigDecimal.valueOf(50000)).funcion(funcion).build();
+        TipoEntrada tipo = TipoEntrada.builder().idTipoEntrada(1L).porcentajeDescuento(BigDecimal.ZERO).requiereAdulto(false).esAdulto(true).build();
+        PerfilCliente perfil = PerfilCliente.builder().idPerfil(1L).build();
+        Reserva reserva = Reserva.builder()
+                .idReserva(16L)
+                .estado("PENDIENTE")
+                .fechaHora(BoletaService.ahora())
+                .perfilCliente(perfil)
+                .build();
+
+        when(zonas.findById(1L)).thenReturn(Optional.of(zona));
+        when(tipos.findById(1L)).thenReturn(Optional.of(tipo));
+        when(boletas.saveAll(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        List<Boleta> emitidas = boletaService.emitir(reserva, List.of(
+                new SeleccionBoletaDTO(1L, 1L),
+                new SeleccionBoletaDTO(1L, 1L)
+        ), null);
+
+        assertEquals(2, emitidas.size());
+        assertEquals("BOLETO-000023", emitidas.get(0).getCodigo());
+        assertEquals("BOLETO-000024", emitidas.get(1).getCodigo());
+    }
 }

@@ -26,6 +26,12 @@ public interface BoletaRepository extends JpaRepository<Boleta, Long> {
     boolean existsByZonaFuncionIdFuncion(Long idFuncion);
     boolean existsByComboIdCombo(Long idCombo);
     Optional<Boleta> findByCodigo(String codigo);
+
+    @Query("SELECT MAX(b.codigo) FROM Boleta b WHERE b.codigo LIKE 'BOLETO-%'")
+    Optional<String> findMaxCodigoBoleta();
+
+    @Query("SELECT MAX(b.idBoleta) FROM Boleta b")
+    Optional<Long> findMaxIdBoleta();
     List<Boleta> findByReservaIdReserva(Long idReserva);
     List<Boleta> findByReservaPerfilClienteUsuarioIdUsuario(Long idUsuario);
     List<Boleta> findByZonaIdZona(Long idZona);

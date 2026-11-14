@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -90,6 +90,8 @@ public class BoletaService {
         Map<Long, Integer> nuevasPorZona = new HashMap<>();
         Map<Long, Integer> nuevasPorFuncion = new HashMap<>();
         List<Boleta> nuevas = new ArrayList<>();
+        long siguienteNumero = obtenerSiguienteNumeroBoleta();
+
         for (SeleccionBoletaDTO seleccion : selecciones) {
             Zona zona = zonaRepository.findById(seleccion.idZona())
                     .orElseThrow(() -> new ResourceNotFoundException("Zona no encontrada con ID: " + seleccion.idZona()));
@@ -122,8 +124,14 @@ public class BoletaService {
 
             BigDecimal precio = precioBase.multiply(BigDecimal.ONE.subtract(tipo.getPorcentajeDescuento().movePointLeft(2)))
                     .setScale(2, RoundingMode.HALF_UP);
+
+            String codigoBoleta = String.format("BOLETO-%06d", siguienteNumero++);
+            while (boletaRepository.findByCodigo(codigoBoleta).isPresent()) {
+                codigoBoleta = String.format("BOLETO-%06d", siguienteNumero++);
+            }
+
             nuevas.add(Boleta.builder()
-                    .codigo(UUID.randomUUID().toString())
+                    .codigo(codigoBoleta)
                     .estado(ACTIVA)
                     .precioPagado(precio)
                     .reserva(reserva)
@@ -248,6 +256,26 @@ public class BoletaService {
     public List<BoletaResponseDTO> listarPorUsuario(Long idUsuario) {
         return boletaRepository.findByReservaPerfilClienteUsuarioIdUsuario(idUsuario).stream()
                 .map(this::mapToDTO).toList();
+    }
+
+    private synchronized long obtenerSiguienteNumeroBoleta() {
+        long siguiente = 1;
+        Optional<String> maxCodigo = boletaRepository.findMaxCodigoBoleta();
+        if (maxCodigo.isPresent() && maxCodigo.get() != null) {
+            String codigo = maxCodigo.get().trim();
+            if (codigo.startsWith("BOLETO-")) {
+                try {
+                    long num = Long.parseLong(codigo.substring("BOLETO-".length()).trim());
+                    siguiente = Math.max(siguiente, num + 1);
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+        Optional<Long> maxId = boletaRepository.findMaxIdBoleta();
+        if (maxId.isPresent() && maxId.get() != null) {
+            siguiente = Math.max(siguiente, maxId.get() + 1);
+        }
+        return siguiente;
     }
 
     public BoletaResponseDTO mapToDTO(Boleta b) {
